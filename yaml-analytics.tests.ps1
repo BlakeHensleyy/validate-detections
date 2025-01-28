@@ -17,7 +17,7 @@ $script:regEx_MaxValue = '^([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9
 $script:regEx_Technique = '^(([T0-9]{5}))+(?:[.0-9]{4})?$'
 
 # Validation for version number (1.3.1)
-$script:regEx_Version = '^([0-9].([0-9]).{2})$'
+$script:regEx_Version = '^([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})$'
 
 # Validation for duration with max values of P14D (14 days), PT24H (24 hours) PT1440M (1440 minutes)
 $script:regEx_yamlTime = '^[1-9]d|^1[0-4]d|([1-9]|[1-9][0-9]|[1-2][0-9][0-9]|3[0-3][0-6])h|([5-9]|[1-9][0-9]|[1-9][0-9][0-9]|1[0-3][0-9][0-9]|14[0-3][0-9]|1440)m'
