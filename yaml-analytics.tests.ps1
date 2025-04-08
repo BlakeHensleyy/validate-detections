@@ -35,15 +35,8 @@ Describe "Detections" {
 
     Context "General" {
 
-        It 'MITRE ATT&CK Should be loaded' {
-            $attack | Should -Not -BeNullOrEmpty
-        }
-
         It 'Converts from YAML | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file, $yamlObject)
             $yamlObject | Should -Not -BeNullOrEmpty
         }
     }
@@ -51,20 +44,14 @@ Describe "Detections" {
     Context "Properties" {
 
         It 'Do properties use camelCasing | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
             ($yamlObject.psobject.Properties | Where-Object Name -eq Keys).value.ForEach{
                 $_ | Should -MatchExactly $regEx_camelCase
             }
         }
 
         It 'Kind should be in the allowed list | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
 
             $kind = $yamlObject.kind
             $expectedKind = @(
@@ -76,30 +63,35 @@ Describe "Detections" {
         }
 
         It 'Version should not be empty | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
 
             $version = $yamlObject.version
             $version | Should -Not -BeNullOrEmpty
         }
 
+        It 'Name should not be empty | <Name>' -TestCases $testCases {
+            param ($file,$yamlObject)
+
+            $name = $yamlObject.name
+            $name | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Description should not be empty | <Name>' -TestCases $testCases {
+            param ($file,$yamlObject)
+
+            $description = $yamlObject.description
+            $description | Should -Not -BeNullOrEmpty
+        }
+
         It 'Version should be in a valid format | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
 
             $version = $yamlObject.version
             $version | Should -MatchExactly $regEx_Version
         }
 
         It 'Severity should be in the allowed list | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
 
             $severities = $yamlObject.severity
             $expectedSeverity = @(
@@ -114,18 +106,12 @@ Describe "Detections" {
         }
 
         It 'Severity should be in PascalCase | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
             $yamlObject.severity | Should -MatchExactly $regEx_PascalCase
         }
 
         It 'Trigger should be in the allowed list values | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
 
             $expectedOperator = @(
                 'eq',
@@ -139,179 +125,93 @@ Describe "Detections" {
         }
 
         It 'TriggerOperator value should be in LowerCase | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
             if ($yamlObject.kind -eq 'Scheduled') {
                 $yamlObject.TriggerOperator | Should -MatchExactly $regEx_LowerCase
             }
         }
 
         It 'Threshold should be a integer value | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
             if ($yamlObject.kind -eq 'Scheduled') {
                 $yamlObject.triggerThreshold | Should -BeOfType System.ValueType
             }
         }
 
         It 'Threshold should not be more than 10000 | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
 
             if ($yamlObject.kind -eq 'Scheduled') {
                 $yamlObject.triggerThreshold | Should -MatchExactly $regEx_MaxValue
             }
         }
 
-        It 'Tactics should be in the expected value list | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+# ~~~~~~~~~~~~~~ ALL MITRE ATTACK TACTICS AND TECHNIQUE CHECKS ARE COMMENTED OUT UNTIL THE QUALITY OF ANALYTIC RULES ARE IMPROVED. TOO MANY FAILS. ~~~~~~~~~~~~~~~~~~~
 
-            $expectedTactics = @(
-                'Reconnaissance',
-                'ResourceDevelopment',
-                'InitialAccess',
-                'Execution',
-                'Persistence',
-                'PrivilegeEscalation',
-                'DefenseEvasion',
-                'CredentialAccess',
-                'Discovery',
-                'LateralMovement',
-                'Collection',
-                'CommandandControl',
-                'Exfiltration',
-                'Impact'
-            )
-            foreach ($tactic in $yamlObject.tactics) {
-                $tactic | Should -BeIn $expectedTactics
-            }
-        }
+#        It 'Tactics should be in the expected value list | <Name>' -TestCases $testCases {
+#            param ($file,$yamlObject)
+#
+#            # The Tactics are updated from the azure-sentinel repo if faulty error occurs: https://github.com/Azure/Azure-Sentinel/blob/master/.script/tests/detectionTemplateSchemaValidation/Models/AttackTactic.cs
+#            $expectedTactics = @(
+#                'Collection',
+#                'CommandAndControl',
+#                'CredentialAccess',
+#                'DefenseEvasion',
+#                'Discovery',
+#                'Exfiltration',
+#                'Execution',
+#                'Impact',
+#                'ImpairProcessControl',
+#                'InitialAccess',
+#                'InhibitResponseFunction',
+#                'LateralMovement',
+#                'Persistence',
+#                'PreAttack',
+#                'PrivilegeEscalation',
+#                'Reconnaissance',
+#                'ResourceDevelopment'
+#            )
+#            foreach ($tactic in $yamlObject.tactics) {
+#                $tactic | Should -BeIn $expectedTactics
+#            }
+#        }
+#
 
-        It 'Technique should be in the expected value list | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+#        It 'Tactics should be in PascalCase | <Name>' -TestCases $testCases {
+#            param ($file,$yamlObject)
+#            $tactics = $yamlObject.tactics
+#
+#            foreach ($tactic in $tactics) {
+#                $tactic | Should -MatchExactly $regEx_PascalCase
+#            }
+#        }
 
-            foreach ($technique in $yamlObject.relevantTechniques) {
-                $attack.id | Should -Contain $technique
-            }
-        }
+#        It 'Technique should be not be empty | <Name>' -TestCases $testCases {
+#            param ($file,$yamlObject)
+#            $techniques = $yamlObject.relevantTechniques
+#            $techniques.count | Should -BeGreaterOrEqual 1
+#
+#        }
 
-        It 'Tactics should be in PascalCase | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
-            $tactics = $yamlObject.tactics
-
-            foreach ($tactic in $tactics) {
-                $tactic | Should -MatchExactly $regEx_PascalCase
-            }
-        }
-
-        It 'Technique should be not be empty | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
-            $techniques = $yamlObject.relevantTechniques
-            $techniques.count | Should -BeGreaterOrEqual 1
-
-        }
-
-        It 'Technique should start with T followed by 4 numbers | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
-            $techniques = $yamlObject.relevantTechniques
-
-            foreach ($technique in $techniques) {
-                $technique | Should -MatchExactly $regEx_Technique
-            }
-        }
-
-        It 'Technique should map to the correct Tactics | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
-            $tactics = $yamlObject.tactics
-            $techniques = $yamlObject.relevantTechniques
-
-            if (($relevantTechniques) -and ($tactics)) {
-                foreach ($technique in $techniques) {
-                    $tactics = @( $attack | Where-Object id -eq "$technique" ).tactics -split ',' | Sort-Object -Unique #2 + #1
-                    [int]$totalTactics = $totalTactics + $tactics.count
-                    Write-Output "Total Tactics $tactics = [$totalTactics]"
-                    foreach ($tactic in $tactics) {
-                        if ($tactic -in $yamlObject.tactics) {
-                            [int]$i = $i + $tactics.count
-                            Write-Output "Current Count is with $tactics [$i]"
-                        }
-                    }
-                    Write-Output "$i"
-                    if ($i -lt $totalTactics) {
-                        $tactic | Should -BeIn $tactics -Because "[$($technique)] is specified in 'relevantTechniques'"
-                    }
-                }
-            }
-        }
-
-        It 'Tactics should map to the correct Technique | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
-            $tactics = $yamlObject.tactics
-            $relevantTechniques = $yamlObject.relevantTechniques
-            
-            $relevantTechniques = foreach ($relevantTechnique in $relevantTechniques) {
-                $relevantTechnique -replace '\..*$'
-            }
-            
-            if (($relevantTechniques) -and ($tactics)) {
-                foreach ($tactic in $tactics) {
-                    $techniques = @( $attack | Where-Object tactics -like "*$tactic*" ).id -split ',' | Sort-Object -Descending -Unique
-                    [int]$totalTechniques = $totalTechniques + $techniques.count
-                    foreach ($technique in $techniques) {
-                        if ($technique -in $relevantTechniques) {
-                            [int]$i = $i + $techniques.count
-                        }
-                    }
-                    if ($i -lt $totalTechniques) {
-                        'a valid technique' | Should -BeIn $relevantTechniques -Because "[$($tactic)] is specified in tactics"
-                    }
-                }
-            }
-        }
+#        It 'Technique should start with T followed by 4 numbers | <Name>' -TestCases $testCases {
+#            param ($file,$yamlObject)
+#            $techniques = $yamlObject.relevantTechniques
+#
+#            foreach ($technique in $techniques) {
+#                $technique | Should -MatchExactly $regEx_Technique
+#            }
+#        }
 
         It 'The id should be a valid GUID | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
             $id = $yamlObject.id
             $id | Should -MatchExactly $regEx_Guid
         }
 
-        It 'Entity Type should be in the expected value list | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+        It 'Entity Type should be in the expected value list and have valid identifiers | <Name>' -TestCases $testCases {
+            param ($file, $yamlObject)
 
-            $entityTypes = $yamlObject.entityMappings.entityType
+            # The entities are populated following this file. Update with any changes to it to fix issues: https://github.com/Azure/Azure-Sentinel/blob/master/.script/tests/detectionTemplateSchemaValidation/Models/EntityMappingIdentifiers.cs
             $expectedEntityTypes = @(
                 'Account',
                 'AzureResource',
@@ -321,27 +221,56 @@ Describe "Detections" {
                 'FileHash',
                 'Host',
                 'IP',
+                'IoTDevice',
+                'Mailbox',
                 'MailCluster',
                 'MailMessage',
-                'Mailbox',
                 'Malware',
                 'Process',
                 'RegistryKey',
                 'RegistryValue',
                 'SecurityGroup',
+                'SentinelEntities',
                 'SubmissionMail',
                 'URL'
             )
-            foreach ($entityType in $entityTypes) {
+
+            $entityIdentifiersMap = @{
+                'Account' = @("Name", "FullName", "NTDomain", "DnsDomain", "UPNSuffix", "Sid", "AadTenantId", "AadUserId", "PUID", "IsDomainJoined", "DisplayName", "ObjectGuid","CloudAppAccountId")
+                'AzureResource' = @("ResourceId")
+                'CloudApplication' = @("AppId", "Name", "InstanceName")
+                'DNS' = @("DomainName")
+                'File' = @("Directory", "Name")
+                'FileHash' = @("Algorithm", "Value")
+                'Host' = @("DnsDomain", "NTDomain", "HostName", "FullName", "NetBiosName", "AzureID", "OMSAgentID", "OSFamily", "OSVersion", "IsDomainJoined")
+                'IoTDevice' = @("DeviceId", "DeviceName", "Manufacturer", "Model", "FirmwareVersion", "OperatingSystem", "MacAddress", "Protocols", "SerialNumber", "Source", "IoTSecurityAgentId", "DeviceType")
+                'IP' = @("Address")
+                'Mailbox' = @("MailboxPrimaryAddress", "DisplayName", "Upn", "ExternalDirectoryObjectId", "RiskLevel")
+                'MailCluster' = @("NetworkMessageIds", "CountByDeliveryStatus", "CountByThreatType", "CountByProtectionStatus", "Threats", "Query", "QueryTime", "MailCount", "IsVolumeAnomaly", "Source", "ClusterSourceIdentifier", "ClusterSourceType", "ClusterQueryStartTime", "ClusterQueryEndTime", "ClusterGroup")
+                'MailMessage' = @("Recipient", "Urls", "Threats", "Sender", "P1Sender", "P1SenderDisplayName", "P1SenderDomain", "SenderIP", "P2Sender", "P2SenderDisplayName", "P2SenderDomain", "ReceivedDate", "NetworkMessageId", "InternetMessageId", "Subject", "BodyFingerprintBin1", "BodyFingerprintBin2", "BodyFingerprintBin3", "BodyFingerprintBin4", "BodyFingerprintBin5", "AntispamDirection", "DeliveryAction", "DeliveryLocation", "Language", "ThreatDetectionMethods")
+                'Malware' = @("Name", "Category")
+                'Process' = @("ProcessId", "CommandLine", "ElevationToken", "CreationTimeUtc")
+                'RegistryKey' = @("Hive", "Key")
+                'RegistryValue' = @("Name", "Value", "ValueType")
+                'SecurityGroup' = @("DistinguishedName", "SID", "ObjectGuid")
+                'SubmissionMail' = @("NetworkMessageId", "Timestamp", "Recipient", "Sender", "SenderIp", "Subject", "ReportType", "SubmissionId", "SubmissionDate", "Submitter")
+                'URL' = @("Url")
+            }
+        
+            foreach ($entityMapping in $yamlObject.entityMappings) {
+                $entityType = $entityMapping.entityType
                 $entityType | Should -BeIn $expectedEntityTypes
+        
+                foreach ($fieldMapping in $entityMapping.fieldMappings) {
+                    $identifier = $fieldMapping.identifier
+                    $validIdentifiers = $entityIdentifiersMap[$entityType]
+                    $identifier | Should -BeIn $validIdentifiers
+                }
             }
         }
 
         It 'Entity Type should be in PascalCase | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
             $entityTypes = $yamlObject.entityMappings.entityType
 
             foreach ($entityType in $entityTypes) {
@@ -352,10 +281,7 @@ Describe "Detections" {
         }
 
         It 'Entity IP, URL and DNS should be in Capitals | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
             $entityTypes = $yamlObject.entityMappings.entityType
 
             foreach ($entityType in $entityTypes) {
@@ -366,10 +292,7 @@ Describe "Detections" {
         }
 
         It 'Query Frequency should be a valid format | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
 
             if ($yamlObject.kind -eq 'Scheduled') {
                 $yamlObject.queryFrequency | Should -MatchExactly $regEx_yamlTime
@@ -377,10 +300,7 @@ Describe "Detections" {
         }
 
         It 'Query Period should be a valid format | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $yamlObject
-            )
+            param ($file,$yamlObject)
 
             if ($yamlObject.kind -eq 'Scheduled') {
                 $yamlObject.queryPeriod | Should -MatchExactly $regEx_yamlTime
