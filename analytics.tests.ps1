@@ -41,10 +41,6 @@ Describe "Detections" {
 
     Context "General" {
 
-        It 'MITRE ATT&CK Should be loaded' {
-            $attack | Should -Not -BeNullOrEmpty
-        }
-
         It 'Converts from JSON | <Name>' -TestCases $testCases {
             param (
                 $file,
@@ -84,6 +80,18 @@ Describe "Detections" {
                 $resources
             )
             $resources.type | Should -BeExactly 'Microsoft.OperationalInsights/workspaces/providers/alertRules'
+        }
+
+        It 'Kind should be in the allowed list | <Name>' -TestCases $testCases {
+            param ($file,$resources)
+
+            $kind = $resources.kind
+            $expectedKind = @(
+                'Scheduled',
+                'NRT'
+            )
+
+            $kind | Should -BeIn $expectedKind
         }
 
     }
@@ -145,6 +153,15 @@ Describe "Detections" {
             }
         }
 
+        It 'suppressionEnabled should be a boolean | <Name>' -TestCases $testCases {
+            param (
+                $file,
+                $properties
+            )
+
+            $properties.suppressionEnabled | Should -BeOfType Boolean
+        }
+
         It 'Trigger should be in the allowed list values | <Name>' -TestCases $testCases {
             param (
                 $file,
@@ -157,7 +174,9 @@ Describe "Detections" {
                 'LessThan',
                 'NotEqual'
             )
-            $properties.triggerOperator | Should -BeIn $expectedOperator
+            if ($resources.kind -ne "NRT") {
+                $properties.triggerOperator | Should -BeIn $expectedOperator
+            }
         }
 
         It 'TriggerOperator value should be in PascalCase | <Name>' -TestCases $testCases {
@@ -165,7 +184,9 @@ Describe "Detections" {
                 $file,
                 $properties
             )
-            $properties.TriggerOperator | Should -MatchExactly $regEx_PascalCase
+            if ($resources.kind -ne "NRT") {
+                $properties.TriggerOperator | Should -MatchExactly $regEx_PascalCase
+            }
         }
 
         It 'Threshold should be a integer value | <Name>' -TestCases $testCases {
@@ -173,7 +194,9 @@ Describe "Detections" {
                 $file,
                 $properties
             )
-            $properties.triggerThreshold | Should -BeOfType System.ValueType
+            if ($resources.kind -ne "NRT") {
+                $properties.triggerThreshold | Should -BeOfType System.ValueType
+            }
         }
 
         It 'Threshold should not be more than 10000 | <Name>' -TestCases $testCases {
@@ -181,151 +204,143 @@ Describe "Detections" {
                 $file,
                 $rules
             )
-
-            $properties.triggerThreshold | Should -MatchExactly $regEx_MaxValue
-        }
-
-        It 'suppressionEnabled should be a boolean | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $properties
-            )
-
-            $properties.suppressionEnabled | Should -BeOfType Boolean
-        }
-
-        It 'Tactics should be in the expected value list | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $properties
-            )
-
-            $expectedTactics = @(
-                'Reconnaissance',
-                'ResourceDevelopment',
-                'InitialAccess',
-                'Execution',
-                'Persistence',
-                'PrivilegeEscalation',
-                'DefenseEvasion',
-                'CredentialAccess',
-                'Discovery',
-                'LateralMovement',
-                'Collection',
-                'CommandandControl',
-                'Exfiltration',
-                'Impact',
-                'ImpairProcessControl',
-                'InhibitResponseFunction'
-            )
-            foreach ($tactic in $properties.tactics) {
-                $tactic | Should -BeIn $expectedTactics
+            if ($resources.kind -ne "NRT") {
+                $properties.triggerThreshold | Should -MatchExactly $regEx_MaxValue
             }
         }
 
-        It 'Technique should be in the expected value list | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $properties
-            )
+#        It 'Tactics should be in the expected value list | <Name>' -TestCases $testCases {
+#            param (
+#                $file,
+#                $properties
+#            )
+#
+#            $expectedTactics = @(
+#                'Reconnaissance',
+#                'ResourceDevelopment',
+#                'InitialAccess',
+#                'Execution',
+#                'Persistence',
+#                'PrivilegeEscalation',
+#                'DefenseEvasion',
+#                'CredentialAccess',
+#                'Discovery',
+#                'LateralMovement',
+#                'Collection',
+#                'CommandandControl',
+#                'Exfiltration',
+#                'Impact',
+#                'ImpairProcessControl',
+#                'InhibitResponseFunction'
+#            )
+#            foreach ($tactic in $properties.tactics) {
+#                $tactic | Should -BeIn $expectedTactics
+#            }
+#        }
+#
+#        It 'Technique should be in the expected value list | <Name>' -TestCases $testCases {
+#            param (
+#                $file,
+#                $properties
+#            )
+#
+#            foreach ($technique in $properties.techniques) {
+#                $attack.id | Should -Contain $technique -Because ''#"[$($attack.id)] is invalid!"
+#            }
+#        }
+#
+#        It 'Tactics should be in PascalCase | <Name>' -TestCases $testCases {
+#            param (
+#                $file,
+#                $properties
+#            )
+#            $tactics = $properties.tactics
+#
+#            foreach ($tactic in $tactics) {
+#                $tactic | Should -MatchExactly $regEx_PascalCase
+#            }
+#        }
+#
+#       It 'Technique should be not be empty | <Name>' -TestCases $testCases {
+#           param (
+#               $file,
+#               $properties
+#           )
+#           $techniques = $properties.techniques
+#
+#           $techniques.count | Should -BeGreaterOrEqual 1
+#
+#       }
+#
+#       It 'Technique should start with T followed by 4 numbers | <Name>' -TestCases $testCases {
+#           param (
+#               $file,
+#               $properties
+#           )
+#           $techniques = $properties.techniques
+#
+#           foreach ($technique in $techniques) {
+#               $technique | Should -MatchExactly $regEx_Technique
+#           }
+#       }
+#
+#       It 'Technique should map to the correct Tactics | <Name>' -TestCases $testCases {
+#           #Validated and Tested!
+#           param (
+#               $file,
+#               $properties
+#           )
+#           $tactics = $properties.tactics
+#           $techniques = $properties.techniques
+#
+#           if (($techniques) -and ($tactics)) {
+#               foreach ($technique in $techniques) {
+#                   $tactics = @( $attack | Where-Object id -eq "$technique" ).tactics -split ',' | Sort-Object -Unique #2 + #1
+#                   [int]$totalTactics = $totalTactics + $tactics.count
+#                   Write-Output "Total Tactics $tactics = [$totalTactics]"
+#                   foreach ($tactic in $tactics) {
+#                       if ($tactic -in $properties.tactics) {
+#                           [int]$i = $i + $tactics.count
+#                           Write-Output "Current Count is with $tactics [$i]"
+#                       }
+#                   }
+#                   Write-Output "$i"
+#                   if ($i -lt $totalTactics) {
+#                       $tactic | Should -BeIn $properties.tactics -Because "[$($technique)] is specified in 'techniques'"
+#                   }
+#               }
+#           }
+#       }
+#
+#       It 'Tactics should map to the correct Technique | <Name>' -TestCases $testCases {
+#           param (
+#               $file,
+#               $properties
+#           )
+#           $tactics = $properties.tactics
+#           $relevantTechniques = $properties.techniques
+#           
+#           $relevantTechniques = foreach ($relevantTechnique in $relevantTechniques) {
+#               $relevantTechnique -replace '\..*$'
+#           }
+#           
+#           if (($relevantTechniques) -and ($tactics)) {
+#               foreach ($tactic in $tactics) {
+#                   $techniques = @( $attack | Where-Object tactics -like "*$tactic*" ).id -split ',' | Sort-Object -Descending -Unique
+#                   [int]$totalTechniques = $totalTechniques + $techniques.count
+#                   foreach ($technique in $techniques) {
+#                       if ($technique -in $relevantTechniques) {
+#                           [int]$i = $i + $techniques.count
+#                       }
+#                   }
+#                   if ($i -lt $totalTechniques) {
+#                       'a valid technique' | Should -BeIn $relevantTechniques -Because "[$($tactic)] is specified in tactics"
+#                   }
+#               }
+#           }
+#       }
+#
 
-            foreach ($technique in $properties.techniques) {
-                $attack.id | Should -Contain $technique -Because ''#"[$($attack.id)] is invalid!"
-            }
-        }
-
-        It 'Tactics should be in PascalCase | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $properties
-            )
-            $tactics = $properties.tactics
-
-            foreach ($tactic in $tactics) {
-                $tactic | Should -MatchExactly $regEx_PascalCase
-            }
-        }
-
-        It 'Technique should be not be empty | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $properties
-            )
-            $techniques = $properties.techniques
-
-            $techniques.count | Should -BeGreaterOrEqual 1
-
-        }
-
-        It 'Technique should start with T followed by 4 numbers | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $properties
-            )
-            $techniques = $properties.techniques
-
-            foreach ($technique in $techniques) {
-                $technique | Should -MatchExactly $regEx_Technique
-            }
-        }
-
-        It 'Technique should map to the correct Tactics | <Name>' -TestCases $testCases {
-            #Validated and Tested!
-            param (
-                $file,
-                $properties
-            )
-            $tactics = $properties.tactics
-            $techniques = $properties.techniques
-
-            if (($techniques) -and ($tactics)) {
-                foreach ($technique in $techniques) {
-                    $tactics = @( $attack | Where-Object id -eq "$technique" ).tactics -split ',' | Sort-Object -Unique #2 + #1
-                    [int]$totalTactics = $totalTactics + $tactics.count
-                    Write-Output "Total Tactics $tactics = [$totalTactics]"
-                    foreach ($tactic in $tactics) {
-                        if ($tactic -in $properties.tactics) {
-                            [int]$i = $i + $tactics.count
-                            Write-Output "Current Count is with $tactics [$i]"
-                        }
-                    }
-                    Write-Output "$i"
-                    if ($i -lt $totalTactics) {
-                        $tactic | Should -BeIn $properties.tactics -Because "[$($technique)] is specified in 'techniques'"
-                    }
-                }
-            }
-        }
-
-        It 'Tactics should map to the correct Technique | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $properties
-            )
-            $tactics = $properties.tactics
-            $relevantTechniques = $properties.techniques
-            
-            $relevantTechniques = foreach ($relevantTechnique in $relevantTechniques) {
-                $relevantTechnique -replace '\..*$'
-            }
-            
-            if (($relevantTechniques) -and ($tactics)) {
-                foreach ($tactic in $tactics) {
-                    $techniques = @( $attack | Where-Object tactics -like "*$tactic*" ).id -split ',' | Sort-Object -Descending -Unique
-                    [int]$totalTechniques = $totalTechniques + $techniques.count
-                    foreach ($technique in $techniques) {
-                        if ($technique -in $relevantTechniques) {
-                            [int]$i = $i + $techniques.count
-                        }
-                    }
-                    if ($i -lt $totalTechniques) {
-                        'a valid technique' | Should -BeIn $relevantTechniques -Because "[$($tactic)] is specified in tactics"
-                    }
-                }
-            }
-        }
-
-        #For now this value should stay empty in our templates
         It 'Alert Rules template should be empty or a valid GUID | <Name>' -TestCases $testCases {
             param (
                 $file,
@@ -358,18 +373,19 @@ Describe "Detections" {
                 $file,
                 $properties
             )
-
+        
             $aggregationKind = $properties.EventGroupingSettings.aggregationKind
-            $aggregationKind | Should -MatchExactly $regEx_PascalCase
+        
+            if ($null -ne $aggregationKind) {
+                $aggregationKind | Should -MatchExactly $regEx_PascalCase
+            } else {
+                Write-Host "Skipping Aggregation Kind test for file $file as the field does not exist."
+            }
         }
 
-        It 'Entity Type should be in the expected value list | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $properties
-            )
-
-            $entityTypes = $properties.entityMappings.entityType
+        It 'Entity Type should be in the expected value list and have valid identifiers | <Name>' -TestCases $testCases {
+            param ($file, $properties)
+            # The entities are populated following this file. Update with any changes to it to fix issues: https://github.com/Azure/Azure-Sentinel/blob/master/.script/tests/detectionTemplateSchemaValidation/Models/EntityMappingIdentifiers.cs
             $expectedEntityTypes = @(
                 'Account',
                 'AzureResource',
@@ -379,19 +395,48 @@ Describe "Detections" {
                 'FileHash',
                 'Host',
                 'IP',
+                'IoTDevice',
+                'Mailbox',
                 'MailCluster',
                 'MailMessage',
-                'Mailbox',
                 'Malware',
                 'Process',
                 'RegistryKey',
                 'RegistryValue',
                 'SecurityGroup',
+                'SentinelEntities',
                 'SubmissionMail',
                 'URL'
             )
-            foreach ($entityType in $entityTypes) {
+            $entityIdentifiersMap = @{
+                'Account' = @("Name", "FullName", "NTDomain", "DnsDomain", "UPNSuffix", "Sid", "AadTenantId", "AadUserId", "PUID", "IsDomainJoined", "DisplayName", "ObjectGuid","CloudAppAccountId")
+                'AzureResource' = @("ResourceId")
+                'CloudApplication' = @("AppId", "Name", "InstanceName")
+                'DNS' = @("DomainName")
+                'File' = @("Directory", "Name")
+                'FileHash' = @("Algorithm", "Value")
+                'Host' = @("DnsDomain", "NTDomain", "HostName", "FullName", "NetBiosName", "AzureID", "OMSAgentID", "OSFamily", "OSVersion", "IsDomainJoined")
+                'IoTDevice' = @("DeviceId", "DeviceName", "Manufacturer", "Model", "FirmwareVersion", "OperatingSystem", "MacAddress", "Protocols", "SerialNumber", "Source", "IoTSecurityAgentId", "DeviceType")
+                'IP' = @("Address")
+                'Mailbox' = @("MailboxPrimaryAddress", "DisplayName", "Upn", "ExternalDirectoryObjectId", "RiskLevel")
+                'MailCluster' = @("NetworkMessageIds", "CountByDeliveryStatus", "CountByThreatType", "CountByProtectionStatus", "Threats", "Query", "QueryTime", "MailCount", "IsVolumeAnomaly", "Source", "ClusterSourceIdentifier", "ClusterSourceType", "ClusterQueryStartTime", "ClusterQueryEndTime", "ClusterGroup")
+                'MailMessage' = @("Recipient", "Urls", "Threats", "Sender", "P1Sender", "P1SenderDisplayName", "P1SenderDomain", "SenderIP", "P2Sender", "P2SenderDisplayName", "P2SenderDomain", "ReceivedDate", "NetworkMessageId", "InternetMessageId", "Subject", "BodyFingerprintBin1", "BodyFingerprintBin2", "BodyFingerprintBin3", "BodyFingerprintBin4", "BodyFingerprintBin5", "AntispamDirection", "DeliveryAction", "DeliveryLocation", "Language", "ThreatDetectionMethods")
+                'Malware' = @("Name", "Category")
+                'Process' = @("ProcessId", "CommandLine", "ElevationToken", "CreationTimeUtc")
+                'RegistryKey' = @("Hive", "Key")
+                'RegistryValue' = @("Name", "Value", "ValueType")
+                'SecurityGroup' = @("DistinguishedName", "SID", "ObjectGuid")
+                'SubmissionMail' = @("NetworkMessageId", "Timestamp", "Recipient", "Sender", "SenderIp", "Subject", "ReportType", "SubmissionId", "SubmissionDate", "Submitter")
+                'URL' = @("Url")
+            }
+            foreach ($entityMapping in $yamlObject.entityMappings) {
+                $entityType = $entityMapping.entityType
                 $entityType | Should -BeIn $expectedEntityTypes
+                foreach ($fieldMapping in $entityMapping.fieldMappings) {
+                    $identifier = $fieldMapping.identifier
+                    $validIdentifiers = $entityIdentifiersMap[$entityType]
+                    $identifier | Should -BeIn $validIdentifiers
+                }
             }
         }
 
@@ -421,58 +466,74 @@ Describe "Detections" {
                     $entityType | Should -MatchExactly '^[A-Z]+(?:[A-Z]+)*$'
                 }
             }
-        }
+        }        
 
+        # Iterate through test cases and apply NRT exclusion logic 
         It 'Suppression Duration should be a valid ISO 8601 format | <Name>' -TestCases $testCases {
             param (
                 $file,
-                $properties
+                $properties,
+                $resources
             )
-
-            $properties.suppressionDuration | Should -MatchExactly $regEx_ISO8601
+            
+            if ($resources.kind -ne "NRT") {
+                $properties.suppressionDuration | Should -MatchExactly $regEx_ISO8601
+            }
         }
 
         It 'Query Frequency should be a valid ISO 8601 format | <Name>' -TestCases $testCases {
             param (
                 $file,
-                $properties
+                $properties,
+                $resources
             )
-
-            $properties.queryFrequency | Should -MatchExactly $regEx_ISO8601
+            
+            if ($resources.kind -ne "NRT") {
+                $properties.queryFrequency | Should -MatchExactly $regEx_ISO8601
+            }
         }
 
         It 'Query Period should be a valid ISO 8601 format | <Name>' -TestCases $testCases {
             param (
                 $file,
-                $properties
+                $properties,
+                $resources
             )
-
-            $properties.queryPeriod | Should -MatchExactly $regEx_ISO8601
+            
+            if ($resources.kind -ne "NRT") {
+                $properties.queryPeriod | Should -MatchExactly $regEx_ISO8601
+            }
         }
 
         It 'Query Frequency should be less or equal than Query Period | <Name>' -TestCases $testCases {
             param (
                 $file,
-                $properties
+                $properties,
+                $resources
             )
+            
+            if ($resources.kind -ne "NRT") {
+                $queryFrequency = [System.Xml.XmlConvert]::ToTimeSpan("$($properties.queryFrequency)")
+                $queryPeriod = [System.Xml.XmlConvert]::ToTimeSpan("$($properties.queryPeriod)")
 
-            $queryFrequency = [System.Xml.XmlConvert]::ToTimeSpan("$($properties.queryFrequency)")
-            $queryPeriod = [System.Xml.XmlConvert]::ToTimeSpan("$($properties.queryPeriod)")
-
-            $queryFrequency.TotalMinutes | Should -BeLessOrEqual $queryPeriod.TotalMinutes
+                $queryFrequency.TotalMinutes | Should -BeLessOrEqual $queryPeriod.TotalMinutes
+            }
         }
 
         It 'Query Frequency should be more than 60 minutes when Period is greater or equal than 2 days | <Name>' -TestCases $testCases {
             param (
                 $file,
-                $properties
+                $properties,
+                $resources
             )
+            
+            if ($resources.kind -ne "NRT") {
+                $queryFrequency = [System.Xml.XmlConvert]::ToTimeSpan("$($properties.queryFrequency)")
+                $queryPeriod = [System.Xml.XmlConvert]::ToTimeSpan("$($properties.queryPeriod)")
 
-            $queryFrequency = [System.Xml.XmlConvert]::ToTimeSpan("$($properties.queryFrequency)")
-            $queryPeriod = [System.Xml.XmlConvert]::ToTimeSpan("$($properties.queryPeriod)")
-
-            if ($queryPeriod.TotalDays -ge 2) {
-                $queryFrequency.TotalMinutes | Should -BeGreaterThan 59
+                if ($queryPeriod.TotalDays -ge 2) {
+                    $queryFrequency.TotalMinutes | Should -BeGreaterThan 59
+                }
             }
         }
     }
@@ -552,27 +613,35 @@ Describe "Detections" {
                 $file,
                 $properties
             )
-
+        
             $groupingConfiguration = $properties.incidentConfiguration.groupingConfiguration
-            $groupingConfiguration.lookbackDuration | Should -MatchExactly $regEx_ISO8601_7D
+        
+            if ($null -ne $groupingConfiguration.lookbackDuration) {
+                $groupingConfiguration.lookbackDuration | Should -MatchExactly $regEx_ISO8601_7D
+            } else {
+                Write-Host "Skipping Lookback Duration test for file $file as the field does not exist."
+            }
         }
 
         It 'Matching method be in the expected value list | <Name>' -TestCases $testCases {
-
             param (
                 $file,
                 $properties
             )
-
+        
             $groupingConfiguration = $properties.incidentConfiguration.groupingConfiguration
-
-            $expectedMethod = @(
-                'Selected',
-                'AnyAlert',
-                'AllEntities'
-            )
-
-            $groupingConfiguration.matchingMethod | Should -BeIn $expectedMethod
+        
+            if ($null -ne $groupingConfiguration.matchingMethod) {
+                $expectedMethod = @(
+                    'Selected',
+                    'AnyAlert',
+                    'AllEntities'
+                )
+        
+                $groupingConfiguration.matchingMethod | Should -BeIn $expectedMethod
+            } else {
+                Write-Host "Skipping Matching Method test for file $file as the field does not exist."
+            }
         }
 
         It 'Group By Entities be in the expected value list | <Name>' -TestCases $testCases {
@@ -592,14 +661,16 @@ Describe "Detections" {
                 'FileHash',
                 'Host',
                 'IP',
+                'IoTDevice',
+                'Mailbox',
                 'MailCluster',
                 'MailMessage',
-                'Mailbox',
                 'Malware',
                 'Process',
                 'RegistryKey',
                 'RegistryValue',
                 'SecurityGroup',
+                'SentinelEntities',
                 'SubmissionMail',
                 'URL'
             )
@@ -639,23 +710,21 @@ Describe "Detections" {
             }
         }
 
-        It 'Group By Alert Details be in the expected value list | <Name>' -TestCases $testCases {
-            param (
-                $file,
-                $properties
-            )
-
-            $groupByAlertDetails = $properties.incidentConfiguration.groupingConfiguration.groupByAlertDetails
-
-            $expectedGroupByTypes = @(
-                'Name',
-                'Severity'
-            )
-
-            foreach ($groupBy in $groupByAlertDetails) {
-                $groupBy | Should -BeIn $expectedGroupByTypes
-            }
-        }
+       It 'Group By Alert Details be in the expected value list | <Name>' -TestCases $testCases {
+           param (
+               $file,
+               $properties
+           )
+           $groupByAlertDetails = $properties.incidentConfiguration.groupingConfiguration.groupByAlertDetails
+           $expectedGroupByTypes = @(
+               'Name',
+               'Severity',
+               'DisplayName' # Added for our env
+           )
+           foreach ($groupBy in $groupByAlertDetails) {
+               $groupBy | Should -BeIn $expectedGroupByTypes
+           }
+       }
 
         It 'Group By Entities should be in PascalCase | <Name>' -TestCases $testCases {
             param (

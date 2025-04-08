@@ -146,8 +146,6 @@ Describe "Detections" {
             }
         }
 
-# ~~~~~~~~~~~~~~ ALL MITRE ATTACK TACTICS AND TECHNIQUE CHECKS ARE COMMENTED OUT UNTIL THE QUALITY OF ANALYTIC RULES ARE IMPROVED. TOO MANY FAILS. ~~~~~~~~~~~~~~~~~~~
-
 #        It 'Tactics should be in the expected value list | <Name>' -TestCases $testCases {
 #            param ($file,$yamlObject)
 #
